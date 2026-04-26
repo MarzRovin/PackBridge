@@ -1,4 +1,4 @@
-const API = '';
+const API = 'https://packbridge.up.railway.app';
 
 let parsedPack = null;
 let resolvedMods = [];
