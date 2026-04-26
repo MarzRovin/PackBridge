@@ -9,7 +9,7 @@ const { packMrpack } = require('./packers/mrpack');
 const { packCurseForge } = require('./packers/curseforge');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 200 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 1024 * 1024 * 1024 } });
 
 app.use(cors());
 app.use(express.json());
