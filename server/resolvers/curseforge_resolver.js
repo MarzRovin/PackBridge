@@ -74,4 +74,25 @@ async function findCompatibleFile(projectId, mcVersion, modloader, apiKey) {
   return sorted[0];
 }
 
-module.exports = { getMod, getModNames, findCompatibleFile };
+// Search CurseForge for mods by name, filtered to MC version + modloader
+async function searchByName(name, mcVersion, modloader, apiKey) {
+  if (!apiKey) return [];
+  const modloaderType = MODLOADER_IDS[modloader] || 0;
+  const params = new URLSearchParams({
+    gameId: MINECRAFT_GAME_ID,
+    searchFilter: name,
+    gameVersion: mcVersion,
+    modLoaderType: modloaderType,
+    pageSize: 3
+  });
+  const res = await request('GET', `/mods/search?${params}`, apiKey);
+  if (res.status !== 200 || !res.body?.data) return [];
+  return res.body.data.map(m => ({
+    projectId: m.id,
+    title: m.name,
+    description: m.summary,
+    url: m.links?.websiteUrl || `https://www.curseforge.com/minecraft/mc-mods/${m.slug}`
+  }));
+}
+
+module.exports = { getMod, getModNames, findCompatibleFile, searchByName };

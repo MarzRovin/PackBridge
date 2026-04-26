@@ -126,10 +126,32 @@ async function resolveMods(mods, targetMcVersion, targetModloader, targetModload
       reason = `No version found for Minecraft ${targetMcVersion} + ${targetModloader} on ${platforms}`;
     }
 
+    // Search for alternatives by name on the target loader
+    let suggestions = [];
+    if (mod.displayName && mod.displayName !== 'Unknown Mod') {
+      try {
+        const cleanedName = modrinth.cleanModName(mod.displayName);
+        const [modrinthSuggestions, cfSuggestions] = await Promise.all([
+          modrinth.searchByName(mod.displayName, targetMcVersion, targetModloader),
+          cfApiKey ? curseforge.searchByName(cleanedName, targetMcVersion, targetModloader, cfApiKey) : Promise.resolve([])
+        ]);
+        // Merge, deduplicate by title, modrinth first
+        const seen = new Set();
+        for (const s of [...modrinthSuggestions, ...cfSuggestions]) {
+          if (!seen.has(s.title.toLowerCase())) {
+            seen.add(s.title.toLowerCase());
+            suggestions.push({ ...s, platform: modrinthSuggestions.includes(s) ? 'modrinth' : 'curseforge' });
+          }
+        }
+        suggestions = suggestions.slice(0, 4);
+      } catch {}
+    }
+
     return {
       status: 'failed',
       displayName: mod.displayName,
       reason,
+      suggestions,
       modrinthProjectId: mod.modrinthProjectId || null,
       cfProjectId: mod.cfProjectId || null,
       original: mod

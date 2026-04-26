@@ -1,4 +1,4 @@
-const API = 'https://packbridge.up.railway.app';
+const API = '';
 
 let parsedPack = null;
 let resolvedMods = [];
@@ -166,6 +166,17 @@ function showResults(resolved, failed, targetMcVersion, targetModloader, targetM
         <div class="failed-name">⚠ ${escHtml(mod.displayName)}</div>
         <div class="failed-reason">${escHtml(mod.reason)}</div>
         ${ids ? `<div class="failed-ids">${escHtml(ids)}</div>` : ''}
+        ${mod.suggestions && mod.suggestions.length > 0 ? `
+          <div class="suggestions">
+            <span class="suggestions-label">Possible ${targetModloader} replacements:</span>
+            ${mod.suggestions.map(s => `
+              <a class="suggestion-item" href="${escHtml(s.url)}" target="_blank">
+                <span class="suggestion-name">${escHtml(s.title)} <span class="platform-badge ${s.platform || 'modrinth'}">${s.platform === 'curseforge' ? 'CurseForge' : 'Modrinth'}</span></span>
+                <span class="suggestion-desc">${escHtml(s.description?.slice(0, 80) || '')}${s.description?.length > 80 ? '…' : ''}</span>
+              </a>
+            `).join('')}
+          </div>
+        ` : ''}
       `;
       failedList.appendChild(item);
     }

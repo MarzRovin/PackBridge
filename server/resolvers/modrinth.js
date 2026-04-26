@@ -77,4 +77,36 @@ async function lookupByHash(hash, algorithm = 'sha1') {
   return null;
 }
 
-module.exports = { findCompatibleVersion, getProjectNames, lookupByHash };
+// Strip loader-specific suffixes from mod names before searching
+function cleanModName(name) {
+  return name
+    .replace(/\s*\[.*?\]/g, '')       // Remove [Fabric], [Forge], etc.
+    .replace(/\s*\(.*?\)/g, '')       // Remove (Fabric), (Forge), etc.
+    .replace(/\s+(fabric|forge|neoforge|quilt|refabricated|reforged)$/i, '')
+    .trim();
+}
+
+// Search Modrinth for mods by name, filtered to a specific loader + MC version
+async function searchByName(name, mcVersion, modloader) {
+  const cleaned = cleanModName(name);
+  if (!cleaned) return [];
+
+  const facets = [
+    [`versions:${mcVersion}`],
+    [`categories:${modloader}`],
+    ['project_type:mod']
+  ];
+
+  const url = `${BASE}/search?query=${encodeURIComponent(cleaned)}&facets=${encodeURIComponent(JSON.stringify(facets))}&limit=3`;
+  const res = await get(url);
+
+  if (res.status !== 200 || !res.body?.hits) return [];
+  return res.body.hits.map(h => ({
+    projectId: h.project_id,
+    title: h.title,
+    description: h.description,
+    url: `https://modrinth.com/mod/${h.slug}`
+  }));
+}
+
+module.exports = { findCompatibleVersion, getProjectNames, lookupByHash, searchByName, cleanModName };

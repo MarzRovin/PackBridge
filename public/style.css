@@ -492,7 +492,51 @@ main {
   gap: 0.5rem;
 }
 
-.hidden { display: none !important; }
+.suggestions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.suggestions-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--warn);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+.suggestion-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.5rem 0.7rem;
+  background: rgba(0,200,255,0.05);
+  border: 1px solid rgba(0,200,255,0.15);
+  border-radius: 2px;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.suggestion-item:hover {
+  background: rgba(0,200,255,0.1);
+  border-color: var(--accent);
+}
+
+.suggestion-name {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--accent);
+}
+
+.suggestion-desc {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
 
 /* Error toast */
 .toast {
