@@ -1,19 +1,7 @@
-# PackShift — Modpack Converter
+# PackBridge — Modpack Converter
 
 Migrate Minecraft modpacks to a new MC version or modloader. Supports `.mrpack` and CurseForge `.zip` as both input and output.
 
-## Setup
-
-```bash
-npm install
-npm start
-# Open http://localhost:3000
-```
-
-For dev with auto-restart:
-```bash
-npm run dev
-```
 
 ## Features
 
