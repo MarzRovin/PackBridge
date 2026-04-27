@@ -83,16 +83,34 @@ async function searchByName(name, mcVersion, modloader, apiKey) {
     searchFilter: name,
     gameVersion: mcVersion,
     modLoaderType: modloaderType,
-    pageSize: 3
+    pageSize: 5
   });
   const res = await request('GET', `/mods/search?${params}`, apiKey);
   if (res.status !== 200 || !res.body?.data) return [];
-  return res.body.data.map(m => ({
-    projectId: m.id,
-    title: m.name,
-    description: m.summary,
-    url: m.links?.websiteUrl || `https://www.curseforge.com/minecraft/mc-mods/${m.slug}`
-  }));
+
+  function nameSimilarity(a, b) {
+    a = a.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+    b = b.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+    if (a === b) return 1;
+    if (b.includes(a) || a.includes(b)) return 0.8;
+    const aWords = new Set(a.split(/\s+/));
+    const bWords = new Set(b.split(/\s+/));
+    const intersection = [...aWords].filter(w => bWords.has(w)).length;
+    const union = new Set([...aWords, ...bWords]).size;
+    return intersection / union;
+  }
+
+  return res.body.data
+    .map(m => ({
+      projectId: m.id,
+      title: m.name,
+      description: m.summary,
+      url: m.links?.websiteUrl || `https://www.curseforge.com/minecraft/mc-mods/${m.slug}`,
+      _score: nameSimilarity(name, m.name)
+    }))
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 3)
+    .map(({ _score, ...s }) => s);
 }
 
 module.exports = { getMod, getModNames, findCompatibleFile, searchByName };

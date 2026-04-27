@@ -83,7 +83,21 @@ function cleanModName(name) {
     .replace(/\s*\[.*?\]/g, '')       // Remove [Fabric], [Forge], etc.
     .replace(/\s*\(.*?\)/g, '')       // Remove (Fabric), (Forge), etc.
     .replace(/\s+(fabric|forge|neoforge|quilt|refabricated|reforged)$/i, '')
+    .replace(/^create:\s*/i, 'Create ')  // Normalize "Create: X" -> "Create X"
     .trim();
+}
+
+// Score how closely two strings match (0-1, higher = better)
+function nameSimilarity(a, b) {
+  a = a.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  b = b.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+  if (a === b) return 1;
+  if (b.includes(a) || a.includes(b)) return 0.8;
+  const aWords = new Set(a.split(/\s+/));
+  const bWords = new Set(b.split(/\s+/));
+  const intersection = [...aWords].filter(w => bWords.has(w)).length;
+  const union = new Set([...aWords, ...bWords]).size;
+  return intersection / union;
 }
 
 // Search Modrinth for mods by name, filtered to a specific loader + MC version
@@ -97,16 +111,23 @@ async function searchByName(name, mcVersion, modloader) {
     ['project_type:mod']
   ];
 
-  const url = `${BASE}/search?query=${encodeURIComponent(cleaned)}&facets=${encodeURIComponent(JSON.stringify(facets))}&limit=3`;
+  const url = `${BASE}/search?query=${encodeURIComponent(cleaned)}&facets=${encodeURIComponent(JSON.stringify(facets))}&limit=5`;
   const res = await get(url);
 
   if (res.status !== 200 || !res.body?.hits) return [];
-  return res.body.hits.map(h => ({
-    projectId: h.project_id,
-    title: h.title,
-    description: h.description,
-    url: `https://modrinth.com/mod/${h.slug}`
-  }));
+
+  // Score and sort by name similarity, take top 3
+  return res.body.hits
+    .map(h => ({
+      projectId: h.project_id,
+      title: h.title,
+      description: h.description,
+      url: `https://modrinth.com/mod/${h.slug}`,
+      _score: nameSimilarity(cleaned, h.title)
+    }))
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 3)
+    .map(({ _score, ...s }) => s);
 }
 
 module.exports = { findCompatibleVersion, getProjectNames, lookupByHash, searchByName, cleanModName };
